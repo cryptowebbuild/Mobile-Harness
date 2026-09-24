@@ -10,7 +10,7 @@
 
   <br />
 
-  [![Release v1.0.5](https://img.shields.io/badge/Release-v1.0.5-F28C52?style=flat-square&logo=github&logoColor=white)](releases/tag/v1.0.5)
+  [![Release v1.0.5](https://img.shields.io/badge/Release-v1.0.5-F28C52?style=flat-square&logo=github&logoColor=white)](https://github.com/cryptowebbuild/Mobile-Harness/releases/tag/v1.0.5)
   [![Android 9+](https://img.shields.io/badge/Android-9%2B-3DDC84?style=flat-square&logo=android&logoColor=white)](#system-requirements)
   [![ARM64 & 32-bit](https://img.shields.io/badge/CPU-ARM64%20%7C%2032--bit-5B8DEF?style=flat-square)](#system-requirements)
   [![MIT License](https://img.shields.io/badge/License-MIT-8B7CF6?style=flat-square&logo=opensourceinitiative&logoColor=white)](LICENSE)
@@ -18,7 +18,7 @@
 
   <br />
 
-  [**Download Fixed APK (v1.0.5)**](releases/mobile-harness-v1.0.5-fixed.apk?raw=true) &nbsp;•&nbsp;
+  [**Download Fixed APK (v1.0.5)**](https://github.com/cryptowebbuild/Mobile-Harness/releases/download/v1.0.5/mobile-harness-v1.0.5-fixed.apk) &nbsp;•&nbsp;
   [**Watch Walkthrough (3 min)**](https://youtu.be/QzAau52Z7yQ) &nbsp;•&nbsp;
   [**Quickstart Guide**](#quickstart) &nbsp;•&nbsp;
   [**Architecture**](#architecture) &nbsp;•&nbsp;
@@ -55,12 +55,12 @@
   <p><strong>64 MB · Fixed & Tested for All Devices (ARM64 & 32-bit Poco C3)</strong></p>
   <p>All-in-one edition with full support for 32-bit (Poco C3, Helio G35) and 64-bit devices, featuring direct Online Cloud Agent mode.</p>
   <br />
-  <a href="releases/mobile-harness-v1.0.5-fixed.apk?raw=true">
+  <a href="https://github.com/cryptowebbuild/Mobile-Harness/releases/download/v1.0.5/mobile-harness-v1.0.5-fixed.apk">
     <img src="https://img.shields.io/badge/Download-Fixed_APK_v1.0.5-F28C52?style=for-the-badge&logo=android&logoColor=white" alt="Download Fixed APK" />
   </a>
   <br /><br />
-  <p>Direct download: <a href="releases/mobile-harness-v1.0.5-fixed.apk?raw=true"><strong>Download mobile-harness-v1.0.5-fixed.apk</strong></a></p>
-  <p>Repo file view: <a href="releases/mobile-harness-v1.0.5-fixed.apk"><code>releases/mobile-harness-v1.0.5-fixed.apk</code></a></p>
+  <p>Direct download link: <a href="https://github.com/cryptowebbuild/Mobile-Harness/releases/download/v1.0.5/mobile-harness-v1.0.5-fixed.apk"><strong>Download mobile-harness-v1.0.5-fixed.apk</strong></a></p>
+  <p>Browse Release: <a href="https://github.com/cryptowebbuild/Mobile-Harness/releases/tag/v1.0.5"><code>https://github.com/cryptowebbuild/Mobile-Harness/releases/tag/v1.0.5</code></a></p>
 </div>
 
 <p align="center">

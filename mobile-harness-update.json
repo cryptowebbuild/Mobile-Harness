@@ -4,7 +4,7 @@
   "notes": "Universal Fixed Edition: Full 32-bit and 64-bit Android support (Poco C3 fix), direct Online AI Cloud Agent mode, and high-performance lightweight build.",
   "artifacts": {
     "online": {
-      "url": "https://github.com/techjarves/Mobile-Harness/releases/download/v1.0.5/mobile-harness-v1.0.5-fixed.apk",
+      "url": "https://github.com/cryptowebbuild/Mobile-Harness/releases/download/v1.0.5/mobile-harness-v1.0.5-fixed.apk",
       "sizeBytes": 66894000
     }
   }
