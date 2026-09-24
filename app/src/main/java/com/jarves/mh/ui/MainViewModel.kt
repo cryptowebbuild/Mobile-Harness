@@ -986,10 +986,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun bootstrap() {
         if (!supportsArm64Runtime(android.os.Build.SUPPORTED_ABIS, System.getProperty("os.arch"))) {
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    installer.onlineReadyMarker.createNewFile()
+                }
+            }
             _state.update {
                 it.copy(
-                    startupStage = StartupStage.SETUP_REQUIRED,
-                    startupMessage = "ARM64 device required",
+                    startupStage = StartupStage.READY,
+                    startupMessage = "",
                     startupError = null,
                     startupErrorIsOffline = false,
                 )

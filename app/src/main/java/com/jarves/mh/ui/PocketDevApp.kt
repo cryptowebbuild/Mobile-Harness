@@ -801,8 +801,8 @@ private fun RuntimeSetupPromptScreen(
     val totalRamLabel = String.format(java.util.Locale.US, "%.1f", totalRamGb)
     val arm64 = supportsArm64Runtime(Build.SUPPORTED_ABIS, System.getProperty("os.arch"))
     // Android reports usable physical memory after hardware/GPU reservations.
-    // RAM is therefore informational; it must not reject nominal 4 GB phones.
-    val compatible = arm64
+    // Supports 64-bit devices with local Linux runtime and 32-bit devices with direct Online AI mode.
+    val compatible = true
 
     var currentStep by remember { mutableIntStateOf(0) }
     val setupScrollState = rememberScrollState()
@@ -942,8 +942,8 @@ private fun RuntimeSetupPromptScreen(
                         SpecRow(
                             icon = Icons.Default.Code,
                             label = "Processor",
-                            value = Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a",
-                            statusOk = arm64,
+                            value = (Build.SUPPORTED_ABIS.firstOrNull() ?: "arm64-v8a") + if (arm64) " · 64-bit" else " · Online Mode",
+                            statusOk = true,
                         )
 
                         SpecRow(
@@ -2427,13 +2427,13 @@ private fun DeviceCheckStep(context: Context, onContinue: () -> Unit) {
     val totalRamGb = memoryInfo.totalMem.toDouble() / 1_073_741_824.0
     val totalRamLabel = String.format(java.util.Locale.US, "%.1f", totalRamGb)
     val arm64 = supportsArm64Runtime(Build.SUPPORTED_ABIS, System.getProperty("os.arch"))
-    val compatible = arm64
+    val compatible = true
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
         BrandMark()
         Text("Your phone is the workspace", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Mobile Harness checks compatibility before downloading the private Linux runtime.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Mobile Harness runs a local Linux runtime on 64-bit phones, and online AI agent mode on 32-bit phones.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         CheckRow(Icons.Default.Memory, "Memory", "$totalRamLabel GB usable · ${if (totalRamGb >= 7.5) "Full mode" else "Lite mode"}", true)
-        CheckRow(Icons.Default.Code, "Processor", Build.SUPPORTED_ABIS.firstOrNull() ?: "Unknown", arm64)
+        CheckRow(Icons.Default.Code, "Processor", (Build.SUPPORTED_ABIS.firstOrNull() ?: "Unknown") + if (arm64) " · 64-bit" else " · Online Mode", true)
         CheckRow(Icons.Default.Storage, "Android", "Android ${Build.VERSION.RELEASE}", true)
         Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(16.dp)) {
             Text(
