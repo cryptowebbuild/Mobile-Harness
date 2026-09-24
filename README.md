@@ -18,7 +18,7 @@
 
   <br />
 
-  [**Download Fixed APK (v1.0.5)**](releases/latest/download/mobile-harness-v1.0.5-fixed.apk) &nbsp;•&nbsp;
+  [**Download Fixed APK (v1.0.5)**](releases/mobile-harness-v1.0.5-fixed.apk?raw=true) &nbsp;•&nbsp;
   [**Watch Walkthrough (3 min)**](https://youtu.be/QzAau52Z7yQ) &nbsp;•&nbsp;
   [**Quickstart Guide**](#quickstart) &nbsp;•&nbsp;
   [**Architecture**](#architecture) &nbsp;•&nbsp;
@@ -52,15 +52,15 @@
 
 <div align="center">
   <h3>Universal Fixed Release (v1.0.5)</h3>
-  <p><strong>64 MB · Fixed & Tested for All Devices</strong></p>
+  <p><strong>64 MB · Fixed & Tested for All Devices (ARM64 & 32-bit Poco C3)</strong></p>
   <p>All-in-one edition with full support for 32-bit (Poco C3, Helio G35) and 64-bit devices, featuring direct Online Cloud Agent mode.</p>
   <br />
-  <a href="releases/latest/download/mobile-harness-v1.0.5-fixed.apk">
+  <a href="releases/mobile-harness-v1.0.5-fixed.apk?raw=true">
     <img src="https://img.shields.io/badge/Download-Fixed_APK_v1.0.5-F28C52?style=for-the-badge&logo=android&logoColor=white" alt="Download Fixed APK" />
   </a>
   <br /><br />
-  <p>Direct release link: <a href="releases/latest/download/mobile-harness-v1.0.5-fixed.apk"><code>releases/latest/download/mobile-harness-v1.0.5-fixed.apk</code></a></p>
-  <p>Or browse all release assets in <a href="releases"><strong>GitHub Releases</strong></a></p>
+  <p>Direct download: <a href="releases/mobile-harness-v1.0.5-fixed.apk?raw=true"><strong>Download mobile-harness-v1.0.5-fixed.apk</strong></a></p>
+  <p>Repo file view: <a href="releases/mobile-harness-v1.0.5-fixed.apk"><code>releases/mobile-harness-v1.0.5-fixed.apk</code></a></p>
 </div>
 
 <p align="center">
