@@ -834,6 +834,30 @@ internal object DshRouteMapper {
                 defaultModel = model,
                 custom = DshCustomRoute(profile.dshApi.ifBlank { "anthropic-messages" }, profile.resolvedBaseUrl),
             )
+            ProviderKind.OPENAI -> DshRoute(
+                name = "mh-openai",
+                keyEnv = DshRuntimeBridge.FALLBACK_KEY_ENV,
+                defaultModel = model,
+                custom = DshCustomRoute("openai-completions", profile.resolvedBaseUrl),
+            )
+            ProviderKind.GEMINI_PRO -> DshRoute(
+                name = "mh-gemini",
+                keyEnv = DshRuntimeBridge.FALLBACK_KEY_ENV,
+                defaultModel = model,
+                custom = DshCustomRoute("openai-completions", profile.resolvedBaseUrl),
+            )
+            ProviderKind.GROQ -> DshRoute(
+                name = "mh-groq",
+                keyEnv = DshRuntimeBridge.FALLBACK_KEY_ENV,
+                defaultModel = model,
+                custom = DshCustomRoute("openai-completions", profile.resolvedBaseUrl),
+            )
+            ProviderKind.OLLAMA -> DshRoute(
+                name = "mh-ollama",
+                keyEnv = DshRuntimeBridge.FALLBACK_KEY_ENV,
+                defaultModel = model,
+                custom = DshCustomRoute("openai-completions", profile.resolvedBaseUrl),
+            )
             ProviderKind.CLAUDE -> throw IllegalArgumentException("Claude subscription login is not supported by DeepSeek Harness")
         }
     }

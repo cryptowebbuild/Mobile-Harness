@@ -73,6 +73,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
@@ -229,6 +230,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 private enum class RootScreen(val label: String, val icon: ImageVector) {
     PROJECTS("Projects", Icons.Default.Folder),
     AGENT("Agent", Icons.Default.SmartToy),
+    MCP("MCP Hub", Icons.Default.Dns),
     SETTINGS("Settings", Icons.Default.Settings),
 }
 private enum class WorkspaceTab(val label: String, val icon: ImageVector) {
@@ -1209,6 +1211,7 @@ private fun toolchainDownloadSummary(selected: Set<DevStack>, agent: AgentKind):
     if (BuildConfig.OFFLINE_RUNTIME_BUNDLES) return "All selected bundles are included in this offline app"
     val total = CORE_RUNTIME_DOWNLOAD_MB +
         when (agent) {
+            AgentKind.HERMES_AGENT -> 0
             AgentKind.CLAUDE_CODE -> CLAUDE_RUNTIME_DOWNLOAD_MB
             AgentKind.DEEPSEEK_HARNESS -> DSH_RUNTIME_DOWNLOAD_MB
             AgentKind.ANTIGRAVITY -> AGY_RUNTIME_DOWNLOAD_MB
@@ -1294,11 +1297,13 @@ private fun AgentChoiceRow(
     onClick: () -> Unit,
 ) {
     val accent = when (agent) {
+        AgentKind.HERMES_AGENT -> Color(0xFF10B981)
         AgentKind.CLAUDE_CODE -> Color(0xFFD97757)
         AgentKind.DEEPSEEK_HARNESS -> Color(0xFF4D6BFE)
         AgentKind.ANTIGRAVITY -> Color(0xFF4285F4)
     }
     val mark = when (agent) {
+        AgentKind.HERMES_AGENT -> "HA"
         AgentKind.CLAUDE_CODE -> "CC"
         AgentKind.DEEPSEEK_HARNESS -> "DS"
         AgentKind.ANTIGRAVITY -> "AG"
@@ -2112,6 +2117,17 @@ private fun RootScreenHost(
                     onRefreshAntigravityModels = viewModel::refreshAntigravityModels,
                     onSetAntigravityModel = viewModel::setAntigravityModel,
                     onSetAntigravityEffort = viewModel::setAntigravityEffort,
+                    onOpenAntigravityUrl = viewModel::openAntigravityAuthUrl,
+                )
+                RootScreen.MCP -> McpHubScreen(
+                    servers = state.mcpServers,
+                    hooks = state.mcpHooks,
+                    autoHooksEnabled = state.autoMcpHooksEnabled,
+                    onToggleAutoHooks = viewModel::toggleAutoMcpHooks,
+                    onToggleServer = viewModel::toggleMcpServer,
+                    onAddCustomServer = viewModel::addCustomMcpServer,
+                    onRemoveCustomServer = viewModel::removeCustomMcpServer,
+                    onTestServer = viewModel::testMcpServer,
                 )
                 RootScreen.SETTINGS -> SettingsScreen(
                     state = state,
@@ -2142,6 +2158,8 @@ private fun RootScreenHost(
                     initialDebugUpdateManifestUrl = viewModel.debugUpdateManifestUrl(),
                     onSetDebugUpdateManifestUrl = viewModel::setDebugUpdateManifestUrl,
                     onClearDebugUpdateManifestUrl = viewModel::clearDebugUpdateManifestUrl,
+                    onToggleLowPowerMode = viewModel::setLowPowerMode,
+                    onClearRam = viewModel::clearRamAndCache,
                 )
             }
         }
@@ -2570,6 +2588,10 @@ private fun ProviderChoiceRow(
     onClick: () -> Unit,
 ) {
     val accent = when (provider) {
+        ProviderKind.OPENAI -> Color(0xFF10A37F)
+        ProviderKind.GEMINI_PRO -> Color(0xFF4285F4)
+        ProviderKind.GROQ -> Color(0xFFF55036)
+        ProviderKind.OLLAMA -> Color(0xFFFFFFFF)
         ProviderKind.CLAUDE -> Color(0xFFD97757)
         ProviderKind.ANTHROPIC -> Color(0xFFE7A26D)
         ProviderKind.LLM_ROUTER -> Color(0xFF5B8DEF)
@@ -2580,6 +2602,10 @@ private fun ProviderChoiceRow(
         ProviderKind.CUSTOM -> PocketOrange
     }
     val mark = when (provider) {
+        ProviderKind.OPENAI -> "OA"
+        ProviderKind.GEMINI_PRO -> "GM"
+        ProviderKind.GROQ -> "GQ"
+        ProviderKind.OLLAMA -> "OL"
         ProviderKind.CLAUDE -> "C"
         ProviderKind.ANTHROPIC -> "A"
         ProviderKind.LLM_ROUTER -> "OR"
@@ -3129,7 +3155,7 @@ private fun ProjectsScreen(
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Chat,
+                            imageVector = Icons.AutoMirrored.Filled.Chat,
                             contentDescription = null,
                             modifier = Modifier.size(17.dp),
                         )
@@ -5354,6 +5380,24 @@ private fun PreviewTab(ready: Boolean, url: String?) {
                         enabled = address.isNotBlank(),
                     ) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh preview")
+                    }
+                }
+                // Quick port shortcuts
+                Row(
+                    modifier = Modifier.padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Ports:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    listOf("3000", "5173", "8000", "8080").forEach { port ->
+                        AssistChip(
+                            onClick = {
+                                address = "localhost:$port"
+                                navigate()
+                            },
+                            label = { Text(":$port", fontSize = 11.sp, fontFamily = FontFamily.Monospace) },
+                            modifier = Modifier.height(28.dp),
+                        )
                     }
                 }
                 if (addressError != null) {

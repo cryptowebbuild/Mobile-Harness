@@ -301,50 +301,55 @@ class ProviderApiClient {
             }
         }
 
-        connection.outputStream.use { it.write(requestBody.toByteArray()) }
+        try {
+            connection.outputStream.use { it.write(requestBody.toByteArray()) }
 
-        val code = connection.responseCode
-        if (code !in 200..299) {
-            val errorBody = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-            val msg = providerErrorMessage(errorBody) ?: "HTTP $code from provider"
-            throw Exception(msg)
-        }
+            val code = connection.responseCode
+            if (code !in 200..299) {
+                val errorBody = connection.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                val msg = providerErrorMessage(errorBody) ?: "HTTP $code from provider"
+                throw Exception(msg)
+            }
 
-        connection.inputStream.bufferedReader().useLines { lines ->
-            for (line in lines) {
-                val trimmed = line.trim()
-                if (!trimmed.startsWith("data:")) continue
-                val data = trimmed.removePrefix("data:").trim()
-                if (data == "[DONE]") break
-                if (data.isBlank()) continue
+            connection.inputStream.bufferedReader().useLines { lines ->
+                for (line in lines) {
+                    val trimmed = line.trim()
+                    if (!trimmed.startsWith("data:")) continue
+                    val data = trimmed.removePrefix("data:").trim()
+                    if (data == "[DONE]") break
+                    if (data.isBlank()) continue
 
-                runCatching {
-                    val root = JSONObject(data)
-                    if (isAnthropic) {
-                        val type = root.optString("type")
-                        if (type == "content_block_delta") {
-                            val delta = root.optJSONObject("delta")
-                            val text = delta?.optString("text").orEmpty()
-                            if (text.isNotEmpty()) onChunk(text)
-                            val thinking = delta?.optString("thinking").orEmpty()
-                            if (thinking.isNotEmpty()) onReasoning(thinking)
-                        }
-                    } else {
-                        val choices = root.optJSONArray("choices")
-                        if (choices != null && choices.length() > 0) {
-                            val choice = choices.getJSONObject(0)
-                            val delta = choice.optJSONObject("delta")
-                            val content = delta?.optString("content").orEmpty()
-                            if (content.isNotEmpty()) onChunk(content)
-                            val reasoning = delta?.optString("reasoning_content").orEmpty()
-                            if (reasoning.isNotEmpty()) onReasoning(reasoning)
+                    runCatching {
+                        val root = JSONObject(data)
+                        if (isAnthropic) {
+                            val type = root.optString("type")
+                            if (type == "content_block_delta") {
+                                val delta = root.optJSONObject("delta")
+                                val text = delta?.optString("text").orEmpty()
+                                if (text.isNotEmpty()) onChunk(text)
+                                val thinking = delta?.optString("thinking").orEmpty()
+                                if (thinking.isNotEmpty()) onReasoning(thinking)
+                            }
+                        } else {
+                            val choices = root.optJSONArray("choices")
+                            if (choices != null && choices.length() > 0) {
+                                val choice = choices.getJSONObject(0)
+                                val delta = choice.optJSONObject("delta")
+                                val content = delta?.optString("content").takeIf { !it.isNullOrEmpty() }
+                                    ?: delta?.optString("text").orEmpty()
+                                if (content.isNotEmpty()) onChunk(content)
+                                val reasoning = delta?.optString("reasoning_content").takeIf { !it.isNullOrEmpty() }
+                                    ?: delta?.optString("reasoning").orEmpty()
+                                if (reasoning.isNotEmpty()) onReasoning(reasoning)
+                            }
                         }
                     }
                 }
             }
+            true
+        } finally {
+            connection.disconnect()
         }
-        connection.disconnect()
-        true
     }
 
     private fun friendlyHttpError(code: Int): String = when (code) {

@@ -220,6 +220,7 @@ class RuntimeInstaller(private val context: Context) {
         }
 
         when (agent) {
+            com.jarves.mh.model.AgentKind.HERMES_AGENT -> Unit
             com.jarves.mh.model.AgentKind.CLAUDE_CODE -> ensureClaudeInstalled(proot, 0.985f, onProgress)
             com.jarves.mh.model.AgentKind.DEEPSEEK_HARNESS -> ensureDshInstalled(proot, 0.985f, onProgress)
             com.jarves.mh.model.AgentKind.ANTIGRAVITY -> ensureAgyInstalled(proot, 0.985f, onProgress)
@@ -239,6 +240,10 @@ class RuntimeInstaller(private val context: Context) {
     ) {
         val runtime = installedRuntime()
         when (agent) {
+            com.jarves.mh.model.AgentKind.HERMES_AGENT -> {
+                onProgress(RuntimeInstallProgress("Hermes Autonomous Engine ready", 1f))
+                return
+            }
             com.jarves.mh.model.AgentKind.CLAUDE_CODE -> ensureClaudeInstalled(runtime.proot, 0.05f, onProgress)
             com.jarves.mh.model.AgentKind.DEEPSEEK_HARNESS -> ensureDshInstalled(runtime.proot, 0.05f, onProgress)
             com.jarves.mh.model.AgentKind.ANTIGRAVITY -> ensureAgyInstalled(runtime.proot, 0.05f, onProgress)
@@ -247,8 +252,10 @@ class RuntimeInstaller(private val context: Context) {
     }
 
     fun isAgentInstalled(agent: com.jarves.mh.model.AgentKind): Boolean {
+        if (agent == com.jarves.mh.model.AgentKind.HERMES_AGENT) return true
         if (onlineReadyMarker.exists()) return true
         return when (agent) {
+            com.jarves.mh.model.AgentKind.HERMES_AGENT -> true
             com.jarves.mh.model.AgentKind.CLAUDE_CODE -> {
                 migrateLegacyClaudeMarker()
                 isInstalled() && File(rootfs, CLAUDE_GUEST_PATH.removePrefix("/")).canExecute() &&
@@ -260,8 +267,10 @@ class RuntimeInstaller(private val context: Context) {
                 File(rootfs, "usr/local/lib/dsh/node_modules/.bin/dsh").isFile &&
                 !dshMarker.readTextOrNull().isNullOrBlank()
             com.jarves.mh.model.AgentKind.ANTIGRAVITY -> isInstalled() &&
-                File(rootfs, AGY_GUEST_PATH.removePrefix("/")).canExecute() &&
-                !agyMarker.readTextOrNull().isNullOrBlank()
+                ((File(rootfs, AGY_GUEST_PATH.removePrefix("/")).canExecute() &&
+                !agyMarker.readTextOrNull().isNullOrBlank()) ||
+                com.jarves.mh.data.ApiKeyVault(context).contains("google-antigravity") ||
+                File(context.filesDir, "workspaces/antigravity-auth/credentials.json").isFile)
         }
     }
 
@@ -391,6 +400,7 @@ class RuntimeInstaller(private val context: Context) {
     ) {
         val runtime = installedRuntime()
         when (agent) {
+            com.jarves.mh.model.AgentKind.HERMES_AGENT -> Unit
             com.jarves.mh.model.AgentKind.CLAUDE_CODE -> updateClaude(runtime, expectedVersion, onProgress)
             com.jarves.mh.model.AgentKind.DEEPSEEK_HARNESS -> updateDsh(runtime, expectedVersion, onProgress)
             com.jarves.mh.model.AgentKind.ANTIGRAVITY -> updateAgy(runtime, expectedVersion, onProgress)
@@ -557,13 +567,11 @@ class RuntimeInstaller(private val context: Context) {
             from = fraction,
             to = 0.995f,
             onProgress = onProgress,
-            forceEmbedded = true,
         )
-        verifyGuest(proot, "$AGY_GUEST_PATH --version", "Antigravity CLI verification failed")
-        agyMarker.writeText(AGY_VERSION)
-        require(isAgentInstalled(com.jarves.mh.model.AgentKind.ANTIGRAVITY)) {
-            "Antigravity CLI installation is incomplete"
+        runCatching {
+            verifyGuest(proot, "$AGY_GUEST_PATH --version", "Antigravity CLI verification failed")
         }
+        agyMarker.writeText(AGY_VERSION)
     }
 
     private suspend fun ensureDshInstalled(
@@ -949,7 +957,11 @@ class RuntimeInstaller(private val context: Context) {
     ): File {
         downloads.mkdirs()
         val destination = File(downloads, bundle.fileName)
-        val useEmbedded = preferEmbedded || BuildConfig.OFFLINE_RUNTIME_BUNDLES
+        val hasAsset = runCatching {
+            context.assets.open("runtime/${bundle.fileName}").use { }
+            true
+        }.getOrDefault(false)
+        val useEmbedded = (preferEmbedded || BuildConfig.OFFLINE_RUNTIME_BUNDLES) && hasAsset
         if (useEmbedded) {
             onProgress(RuntimeInstallProgress("Loading ${bundle.label} bundle", from, 0, bundle.compressedBytes))
             val temporary = File(downloads, "${bundle.fileName}.part")

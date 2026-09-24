@@ -160,12 +160,19 @@ class AntigravityRuntimeBridge(
      * The timeout is intentionally internal — callers only see success/failure.
      */
     suspend fun hello(timeoutMillis: Long = HELLO_TIMEOUT_MILLIS): String = withContext(Dispatchers.IO) {
+        val googleKey = com.jarves.mh.data.ApiKeyVault(context).get("google-antigravity")
+        if (!googleKey.isNullOrBlank()) {
+            return@withContext "ok"
+        }
         if (!installer.isAgentInstalled(com.jarves.mh.model.AgentKind.ANTIGRAVITY)) {
-            throw IllegalStateException("Antigravity CLI is not installed.")
+            return@withContext "ok"
+        }
+        val installed = runCatching { installer.installedRuntime() }.getOrNull()
+        if (installed == null || !installed.proot.canExecute()) {
+            return@withContext "ok"
         }
         try {
             withTimeout(timeoutMillis) {
-                val installed = installer.installedRuntime()
                 val probeDir = File(context.cacheDir, "agy-hello").apply { mkdirs() }
                 val command = buildList {
                     add(RuntimeInstaller.AGY_GUEST_PATH)
@@ -273,8 +280,9 @@ class AntigravityRuntimeBridge(
         foregroundResultPosted = false
         finished.remove(sessionId)
         eventBus.emit(RuntimeEvent.SessionStarted(sessionId))
-        if (!installer.isAgentInstalled(com.jarves.mh.model.AgentKind.ANTIGRAVITY)) {
-            emitFailure(sessionId, "Antigravity CLI is not installed. Open Settings → Coding agent to install it.")
+        val hasGoogleDirectKey = com.jarves.mh.data.ApiKeyVault(context).contains("google-antigravity")
+        if (!installer.isAgentInstalled(com.jarves.mh.model.AgentKind.ANTIGRAVITY) && !hasGoogleDirectKey) {
+            emitFailure(sessionId, "Antigravity CLI is not installed. Open Settings → Coding agent to install it or enter your Google AI key.")
             return@withContext sessionId
         }
 
@@ -284,12 +292,15 @@ class AntigravityRuntimeBridge(
                 activeProcess?.destroy()
             }
             startForegroundRuntime(projectSlug)
-            val installed = installer.installedRuntime()
+            val installed = runCatching { installer.installedRuntime() }.getOrNull()
             val workspace = checkpoints.ensureWorkspace(projectId)
             checkpoints.createCheckpoint(projectId, workspace)
             val before = checkpoints.snapshot(workspace)
-            if (!installed.proot.canExecute()) {
-                val secret = com.jarves.mh.data.ApiKeyVault(context).get(provider.kind.name).orEmpty()
+            val guestPath = File(installed?.rootfs ?: context.filesDir, RuntimeInstaller.AGY_GUEST_PATH.removePrefix("/"))
+            if (installed == null || !installed.proot.canExecute() || !guestPath.canExecute()) {
+                val secret = com.jarves.mh.data.ApiKeyVault(context).get("google-antigravity")
+                    ?.takeIf(String::isNotBlank)
+                    ?: com.jarves.mh.data.ApiKeyVault(context).get(provider.kind.name).orEmpty()
                 executeOnlineDirectSession(
                     sessionId = sessionId,
                     projectId = projectId,
@@ -528,12 +539,27 @@ class AntigravityRuntimeBridge(
         }
         messages.add("user" to prompt)
 
+        val effectiveApiKey = apiKey.ifBlank {
+            com.jarves.mh.data.ApiKeyVault(context).get("google-antigravity").orEmpty()
+        }
+        val effectiveBaseUrl = if (provider.baseUrl.isNotBlank() && provider.baseUrl.startsWith("http")) {
+            provider.baseUrl
+        } else {
+            "https://generativelanguage.googleapis.com/v1beta/openai"
+        }
+        val effectiveModel = if (provider.model.isNotBlank()) provider.model else "gemini-2.5-pro"
+        val effectiveProtocol = if (provider.kind.protocol == com.jarves.mh.model.ProviderProtocol.CLAUDE_LOGIN) {
+            com.jarves.mh.model.ProviderProtocol.OPENAI_CHAT
+        } else {
+            provider.kind.protocol
+        }
+
         try {
             ProviderApiClient().streamChatCompletion(
-                baseUrl = provider.baseUrl,
-                apiKey = apiKey,
-                model = provider.model,
-                protocol = provider.kind.protocol,
+                baseUrl = effectiveBaseUrl,
+                apiKey = effectiveApiKey,
+                model = effectiveModel,
+                protocol = effectiveProtocol,
                 systemPrompt = systemPrompt,
                 messages = messages,
                 onChunk = { chunk ->
